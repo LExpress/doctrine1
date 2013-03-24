@@ -891,7 +891,8 @@ abstract class Doctrine_Query_Abstract
     public function calculateQueryCacheHash()
     {
         $dql = $this->getDql();
-        $hash = md5($dql . var_export($this->_pendingJoinConditions, true) . 'DOCTRINE_QUERY_CACHE_SALT');
+        $conn = $this->getConnection();
+        $hash = md5($dql . $conn->getOption('dsn') . var_export($this->_pendingJoinConditions, true) . 'DOCTRINE_QUERY_CACHE_SALT');
         return $hash;
     }
 
