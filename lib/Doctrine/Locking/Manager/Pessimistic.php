@@ -30,6 +30,7 @@
  * @author      Roman Borschel <roman@code-factory.org>
  * @author      Pierre Minnieur <pm@pierre-minnieur.de>
  * @author      Konsta Vesterinen <kvesteri@cc.hut.fi>
+ * @author      Florian Zumkeller-Quast <florian.zumkeller-quast@adition.com>
  * @license     http://www.opensource.org/licenses/lgpl-license.php LGPL
  * @since       1.0
  * @version     $Revision: 7490 $
@@ -89,6 +90,36 @@ class Doctrine_Locking_Manager_Pessimistic
         }
     }
 
+
+    /**
+     * Create and return a unique key for the the given record
+     *
+     * @author Florian Zumkeller-Quast <florian.zumkeller-quast@adition.com>
+     *
+     * @since 2010-07-02
+     *
+     * @param Doctrine_Record $record The record to create the object key for
+     *
+     * @return string The object key for the  given record
+     */
+    private function getObjectKey(Doctrine_Record $record)
+    {
+        $fields = $record->getTable()->getIdentifier();
+
+        // Check if its a composite PK
+        if(is_array($fields) === false) {
+            $fields = array($fields);
+        }
+
+        $key = '';
+        foreach($fields as $field) {
+            $value = $record->get($field);
+            $key = sprintf('%s|%s:%s', $key, $field, base64_encode($value));
+        }
+
+        return sha1($key);
+    }
+
     /**
      * Obtains a lock on a {@link Doctrine_Record}
      *
@@ -101,15 +132,10 @@ class Doctrine_Locking_Manager_Pessimistic
     public function getLock(Doctrine_Record $record, $userIdent)
     {
         $objectType = $record->getTable()->getComponentName();
-        $key        = $record->getTable()->getIdentifier();
+        $key        = $this->getObjectKey($record);
 
         $gotLock = false;
         $time = time();
-
-        if (is_array($key)) {
-            // Composite key
-            $key = implode('|', $key);
-        }
 
         try {
             $dbh = $this->conn->getDbh();
@@ -170,12 +196,7 @@ class Doctrine_Locking_Manager_Pessimistic
     public function releaseLock(Doctrine_Record $record, $userIdent)
     {
         $objectType = $record->getTable()->getComponentName();
-        $key        = $record->getTable()->getIdentifier();
-
-        if (is_array($key)) {
-            // Composite key
-            $key = implode('|', $key);
-        }
+        $key        = $this->getObjectKey($record);
 
         try {
             $dbh = $this->conn->getDbh();
@@ -206,11 +227,6 @@ class Doctrine_Locking_Manager_Pessimistic
      */
     private function _getLockingUserIdent($objectType, $key)
     {
-        if (is_array($key)) {
-            // Composite key
-            $key = implode('|', $key);
-        }
-
         try {
             $dbh = $this->conn->getDbh();
             $stmt = $dbh->prepare('SELECT user_ident FROM ' . $this->_lockTable
@@ -241,7 +257,7 @@ class Doctrine_Locking_Manager_Pessimistic
     public function getLockOwner($lockedRecord)
     {
         $objectType = $lockedRecord->getTable()->getComponentName();
-        $key        = $lockedRecord->getTable()->getIdentifier();
+        $key        = $this->getObjectKey($lockedRecord);
         return $this->_getLockingUserIdent($objectType, $key);
     }
 
