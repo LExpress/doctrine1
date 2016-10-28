@@ -1025,7 +1025,7 @@ class Doctrine_Collection extends Doctrine_Access implements Countable, Iterator
 
         $this->data = array();
 
-        if ($this->reference) {
+        if ($deep && $this->reference) {
             $this->reference->free($deep);
             $this->reference = null;
         }
