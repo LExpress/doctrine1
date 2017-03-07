@@ -32,6 +32,8 @@
  */
 class Doctrine_Template_I18n extends Doctrine_Template
 {
+    protected $_columns = array();
+
     /**
      * __construct
      *
@@ -44,13 +46,42 @@ class Doctrine_Template_I18n extends Doctrine_Template
         $this->_plugin = new Doctrine_I18n($this->_options);
     }
 
+    public function setUp()
+    {
+        $this->_options['componentClassName'] = $this->_table->getClassNameToReturn();
+
+        if (empty($this->_options['fields'])) {
+            throw new Doctrine_I18n_Exception('Fields not set.');
+        }
+
+        $cols = $this->_table->getColumns();
+
+        $columns = array();
+
+        foreach ($cols as $column => $definition) {
+            $fieldName = $this->_table->getFieldName($column);
+            
+            if (in_array($fieldName, $this->_options['fields'])) {
+                if ($column != $fieldName) {
+                    $column .= ' as ' . $fieldName;
+                }
+
+                $columns[$column] = $definition;
+                $this->_table->removeColumn($fieldName);
+            }
+        }
+
+        $this->_columns = $columns;
+    }
+
     /**
      * Initialize the I18n plugin for the template
      *
      * @return void
      */
-    public function setUp()
+    public function setTableDefinition()
     {
+        $this->_plugin->setOption('columns', $this->_columns);
         $this->_plugin->initialize($this->_table); 
     }
 
