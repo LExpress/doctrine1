@@ -128,6 +128,26 @@ class Doctrine_Connection_Mysql extends Doctrine_Connection_Common
     }
 
     /**
+     * Get the SQL mode on the current connection
+     */
+    public function getSqlMode()
+    {
+        return $this->fetchOne('SELECT @@sql_mode');
+    }
+    /**
+     * Set the SQL mode on the current connection
+     *
+     * @param string $sqlmode   SQL mode
+     *
+     * @link http://dev.mysql.com/doc/refman/5.7/en/server-options.html#option_mysqld_sql-mode
+     */
+    public function setSqlMode($sqlmode)
+    {
+        $query = 'SET sql_mode = ' . $this->quote($sqlmode);
+        $this->exec($query);
+    }
+
+    /**
      * Execute a SQL REPLACE query. A REPLACE query is identical to a INSERT
      * query, except that if there is already a row in the table with the same
      * key field values, the REPLACE query just updates its values instead of
