@@ -155,10 +155,18 @@ class Doctrine_Validator extends Doctrine_Locator_Injectable
      {
          if ($var instanceof Doctrine_Expression) {
              return true;
-         } else if ($var === null) {
+         }
+
+         if ($var === null) {
              return true;
-         } else if (is_object($var)) {
-             return $type == 'object';
+         }
+
+         if (is_array($var)) {
+             return $type === 'array';
+         }
+
+         if (is_object($var)) {
+             return $type === 'object';
          }
 
          switch ($type) {
