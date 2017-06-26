@@ -1,7 +1,5 @@
 <?php
 /*
- *  $Id$
- *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -28,7 +26,6 @@
  * @category    Object Relational Mapping
  * @link        www.doctrine-project.org
  * @since       1.0
- * @version     $Revision$
  */
 class Doctrine_Export_Sqlite_TestCase extends Doctrine_UnitTestCase 
 {
@@ -89,10 +86,6 @@ class Doctrine_Export_Sqlite_TestCase extends Doctrine_UnitTestCase
 
         $this->export->createTable('sometable', $fields, $options);
 
-        //this was the old line, but it looks like the table is created first 
-        //and then the index so i replaced it with the ones below
-        //$this->assertEqual($var, 'CREATE TABLE sometable (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(4), INDEX myindex (id, name))');
-
         $this->assertEqual($this->adapter->pop(),"CREATE INDEX myindex_idx ON sometable (id, name)");
 
         $this->assertEqual($this->adapter->pop(), 'CREATE TABLE sometable (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(4))');
@@ -110,10 +103,6 @@ class Doctrine_Export_Sqlite_TestCase extends Doctrine_UnitTestCase
                          );
 
         $this->export->createTable('sometable', $fields, $options);
-
-        //this was the old line, but it looks like the table is created first 
-        //and then the index so i replaced it with the ones below
-        //$this->assertEqual($var, 'CREATE TABLE sometable (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(4), INDEX myindex (id, name))');
 
         $this->assertEqual($this->adapter->pop(),'CREATE INDEX "myindex_idx" ON "sometable" ("id", "name")');
 
@@ -165,9 +154,6 @@ class Doctrine_Export_Sqlite_TestCase extends Doctrine_UnitTestCase
 
         $this->export->createTable('sometable', $fields, $options);
         
-        //removed this assertion and inserted the two below
-//        $this->assertEqual($this->adapter->pop(), 'CREATE TABLE sometable (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(4), INDEX myindex (id ASC, name DESC))');
-
         $this->assertEqual($this->adapter->pop(),"CREATE INDEX myindex_idx ON sometable (id ASC, name DESC)");
 
         $this->assertEqual($this->adapter->pop(), 'CREATE TABLE sometable (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(4))');
@@ -175,14 +161,11 @@ class Doctrine_Export_Sqlite_TestCase extends Doctrine_UnitTestCase
     }
 
     /**
-    public function testExportSupportsEmulationOfCascadingDeletes()
+     * Testing the create index with a database name since the syntax is different with sqlite
+     */
+    public function testCreateIndexWithDatabaseName()
     {
-        $r = new ForeignKeyTest;
-
-        $this->assertEqual($this->adapter->pop(), 'COMMIT');
-        $this->assertEqual($this->adapter->pop(), 'CREATE TRIGGER doctrine_foreign_key_test_cscd_delete AFTER DELETE ON foreign_key_test BEGIN DELETE FROM foreign_key_test WHERE parent_id = old.id;END;');
-        $this->assertEqual($this->adapter->pop(), 'CREATE TABLE foreign_key_test (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(2147483647), code INTEGER, content VARCHAR(4000), parent_id INTEGER)');
-        $this->assertEqual($this->adapter->pop(), 'BEGIN TRANSACTION');
+        $indexSql = $this->export->createIndexSql('"somedb"."tablename"', 'indexname', array('type' => 'unique', 'fields' => array('somefield')));
+        $this->assertEqual($indexSql,'CREATE UNIQUE INDEX "somedb".indexname_idx ON "tablename" (somefield)');
     }
-    */
 }
