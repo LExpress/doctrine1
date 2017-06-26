@@ -118,6 +118,12 @@ class Doctrine_Export_Sqlite extends Doctrine_Export
             }
         }
 
+        if (false !== strpos($table, '.')) {
+            $dbAndTableName = explode('.', $table);
+            $name  = $dbAndTableName[0] . '.' . $name;
+            $table = $dbAndTableName[1];
+        }
+
         $query = 'CREATE ' . $type . 'INDEX ' . $name . ' ON ' . $table;
         $query .= ' (' . $this->getIndexFieldDeclarationList($definition['fields']) . ')';
 
