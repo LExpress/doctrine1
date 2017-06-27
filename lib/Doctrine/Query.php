@@ -484,7 +484,7 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
         }
 
         $sql = array();
-        foreach ($fields as $fieldAlias => $fieldName) {
+        foreach ($fields as $fieldName) {
             $columnName = $table->getColumnName($fieldName);
             if (($owner = $table->getColumnOwner($columnName)) !== null &&
                     $owner !== $table->getComponentName()) {
@@ -496,17 +496,10 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
                        . ' AS '
                        . $this->_conn->quoteIdentifier($tableAlias . '__' . $columnName);
             } else {
-                // Fix for http://www.doctrine-project.org/jira/browse/DC-585
-                // Take the field alias if available
-                if (isset($this->_aggregateAliasMap[$fieldAlias])) {
-                    $aliasSql = $this->_aggregateAliasMap[$fieldAlias];
-                } else {
-                    $columnName = $table->getColumnName($fieldName);
-                    $aliasSql = $this->_conn->quoteIdentifier($tableAlias . '__' . $columnName);
-                }
+                $columnName = $table->getColumnName($fieldName);
                 $sql[] = $this->_conn->quoteIdentifier($tableAlias) . '.' . $this->_conn->quoteIdentifier($columnName)
                        . ' AS '
-                       . $aliasSql;
+                       . $this->_conn->quoteIdentifier($tableAlias . '__' . $columnName);
             }
         }
 
@@ -660,13 +653,6 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
                 $this->_queryComponents[$componentAlias]['agg'][$index] = $alias;
 
                 $this->_neededTables[] = $tableAlias;
-
-                // Fix for http://www.doctrine-project.org/jira/browse/DC-585
-                // Add selected columns to pending fields
-                if (preg_match('/^([^\(]+)\.(\'?)(.*?)(\'?)$/', $expression, $field)) {
-                    $this->_pendingFields[$componentAlias][$alias] = $field[3];
-                }
-
             } else {
                 $e = explode('.', $terms[0]);
 
