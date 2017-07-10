@@ -552,6 +552,9 @@ class Doctrine_Manager extends Doctrine_Configurable implements Countable, Itera
      */
     public function getConnectionForComponent($componentName)
     {
+        // Bug fix to force connection binding.
+        $componentExists = class_exists($componentName);
+
         Doctrine_Core::modelsAutoload($componentName);
 
         if (isset($this->_bound[$componentName])) {
