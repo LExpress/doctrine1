@@ -528,7 +528,6 @@ requiring needless code duplication.</description>
       <file name="DoctrineStyleTask.php" role="test" />
       <file name="EmptyFile.php" role="test" />
       <file name="InvalidClassNameForATask.php" role="test" />
-      <file name="should-be-ignored.php" role="test" />
       <file name="TaskDeclaredInAnIncFile.inc.php" role="test" />
      </dir> <!-- /tests/CliTestCase/testLoadtasksLoadsDoctrineStyleTasksFromTheSpecifiedDirectory -->
      <file name="baz.php" role="test" />
