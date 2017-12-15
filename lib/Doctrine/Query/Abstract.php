@@ -97,7 +97,7 @@ abstract class Doctrine_Query_Abstract
     /**
      * @var integer $_state   The current state of this query.
      */
-    protected $_state = Doctrine_Query::STATE_CLEAN;
+    protected $_state = Doctrine_Query_Abstract::STATE_CLEAN;
 
     /**
      * @var array $_params  The parameters of this query.
