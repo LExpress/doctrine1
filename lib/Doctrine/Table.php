@@ -268,6 +268,10 @@ class Doctrine_Table extends Doctrine_Configurable implements Countable, Seriali
             if ($this->isTree()) {
                 $this->getTree()->setUp();
             }
+
+            $event = new Doctrine_Event($this->record, Doctrine_Event::RECORD_POST_SETUP);
+
+            $this->record->postSetUp($event);
         } else {
             if ( ! isset($this->_options['tableName'])) {
                 $this->setTableName(Doctrine_Inflector::tableize($this->_options['name']));
@@ -3056,6 +3060,10 @@ class Doctrine_Table extends Doctrine_Configurable implements Countable, Seriali
         if ($this->isTree()) {
             $this->getTree()->setUp();
         }
+
+        $event = new Doctrine_Event($this->record, Doctrine_Event::RECORD_POST_SETUP);
+
+        $this->record->postSetUp($event);
 
         $this->_filters[]  = new Doctrine_Record_Filter_Standard();
         if ($this->getAttribute(Doctrine_Core::ATTR_USE_TABLE_REPOSITORY)) {

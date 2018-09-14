@@ -153,6 +153,7 @@ abstract class Doctrine_Record_Generator extends Doctrine_Record_Abstract
         $ownerClassName = $this->_options['table']->getComponentName();
         $className = $this->_options['className'];
         $this->_options['className'] = str_replace('%CLASS%', $ownerClassName, $className);
+        $componentName = $this->_options['className'];
 
         if (isset($this->_options['tableName'])) {
             $ownerTableName = $this->_options['table']->getTableName();
@@ -160,10 +161,28 @@ abstract class Doctrine_Record_Generator extends Doctrine_Record_Abstract
             $this->_options['tableName'] = str_replace('%TABLE%', $ownerTableName, $tableName);
         }
 
-        // check that class doesn't exist (otherwise we cannot create it)
-        if ($this->_options['generateFiles'] === false && class_exists($this->_options['className'])) {
-            $this->_table = Doctrine_Core::getTable($this->_options['className']);
-            return false;
+        $connection = $table->getConnection();
+        $hasTableCache = $connection->getAttribute(Doctrine_Core::ATTR_TABLE_CACHE);
+        if ($hasTableCache) {
+            // Load from cache
+            $tableCacheDriver = $connection->getTableCacheDriver();
+            $hash = md5($componentName.'DOCTRINE_TABLE_CACHE_SALT');
+            $cached = $tableCacheDriver->fetch($hash);
+
+            if ($cached) {
+                $this->_table = unserialize($cached);
+                $this->_table->initializeFromCache($connection, $this);
+
+                $connection->addTable($this->_table);
+
+                $this->buildRelation();
+
+                $this->generateClassFromTable($this->_table);
+
+                $this->buildChildDefinitions();
+
+                return;
+            }
         }
 
         $this->buildTable();
@@ -182,6 +201,11 @@ abstract class Doctrine_Record_Generator extends Doctrine_Record_Abstract
         $this->buildChildDefinitions();
 
         $this->_table->initIdentifier();
+
+        if ($hasTableCache) {
+            // Save cached table
+            $tableCacheDriver->save($hash, serialize($this->_table), $connection->getTableCacheLifeSpan());
+        }
     }
 
     /**
@@ -461,7 +485,9 @@ abstract class Doctrine_Record_Generator extends Doctrine_Record_Abstract
             } else {
                 throw new Doctrine_Record_Exception('If you wish to generate files then you must specify the path to generate the files in.');
             }
-        } else {
+        } elseif (!class_exists($definition['className'])) {
+            // The class is not defined then we can load the definition.
+
             $def = $builder->buildDefinition($definition);
 
             eval($def);

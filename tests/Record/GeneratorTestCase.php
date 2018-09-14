@@ -55,6 +55,22 @@ class Doctrine_Record_Generator_TestCase extends Doctrine_UnitTestCase
             $this->fail($e->getMessage());
         }
     }
+
+    public function testGeneratorModelAutoload()
+    {
+        Doctrine_Manager::connection('sqlite::memory:', 'test_tmp_conn', false);
+        Doctrine_Manager::getInstance()->bindComponent('I18nGeneratorModelAutoload', 'test_tmp_conn');
+        Doctrine_Core::createTablesFromArray(array('I18nGeneratorModelAutoload'));
+
+        try {
+            $record = new I18nGeneratorModelAutoload();
+            $record->Translation['EN']->title = 'en test';
+
+            $this->fail('The generated record class is autoloadable then it must be used.');
+        } catch (LogicException $e) {
+            $this->assertEqual('This record is expected to be instanciated as generateFiles option on record generator is false and it is autoloadable.', $e->getMessage());
+        }
+    }
 }
 
 class I18nGeneratorComponentBinding extends Doctrine_Record
@@ -69,4 +85,8 @@ class I18nGeneratorComponentBinding extends Doctrine_Record
     {
         $this->actAs('I18n', array('fields' => array('title')));
     }
+}
+
+class I18nGeneratorModelAutoload extends I18nGeneratorComponentBinding
+{
 }

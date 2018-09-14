@@ -15,5 +15,8 @@
     },
     "autoload": {
         "psr-0": { "Doctrine_": "lib/" }
+    },
+    "autoload-dev": {
+        "psr-4": { "": "tests/autoloaded/" }
     }
 }

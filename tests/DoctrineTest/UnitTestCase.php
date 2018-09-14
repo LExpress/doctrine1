@@ -121,6 +121,14 @@ class UnitTestCase
         $this->_fail($message);    
     }
 
+    public function failFromException($e)
+    {
+        $this->fail(sprintf('Unexpected exception "%s" %s',
+            $e->getMessage(),
+            "\n\n".$e->getTraceAsString()
+        ));
+    }
+
     public function _fail($message = "")
     {
         $trace = debug_backtrace();

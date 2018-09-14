@@ -601,6 +601,13 @@ abstract class Doctrine_Record extends Doctrine_Record_Abstract implements Count
     { }
 
     /**
+     * Empty template method to provide Record classes with the ability to alter setup
+     * after it runs
+     */
+    public function postSetUp($event)
+    { }
+
+    /**
      * Get the record error stack as a human readable string.
      * Useful for outputting errors to user via web browser
      *

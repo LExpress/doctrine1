@@ -11,6 +11,9 @@ php:
   - hhvm
   - nightly
 
+services:
+  - mysql
+
 matrix:
   include:
     - php: "5.3"
@@ -20,5 +23,11 @@ matrix:
     - php: nightly
     - php: hhvm
 
+before_install:
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
+
+before_script:
+  - composer install
+
 script:
-  - php -dshort_open_tag=Off -dmagic_quotes_gpc=Off tests/index.php
+  - "cd tests && php -dshort_open_tag=Off -dmagic_quotes_gpc=Off run.php"

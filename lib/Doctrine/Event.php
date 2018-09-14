@@ -68,6 +68,7 @@ class Doctrine_Event
     const RECORD_DQL_SELECT  = 28;
     const RECORD_DQL_UPDATE  = 29;
     const RECORD_VALIDATE    = 30;
+    const RECORD_POST_SETUP  = 31;
 
     /**
      * @var mixed $_nextSequence        the sequence of the next event that will be created

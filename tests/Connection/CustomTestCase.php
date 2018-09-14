@@ -49,7 +49,10 @@ class Doctrine_Connection_Custom_TestCase extends Doctrine_UnitTestCase
 
 class Doctrine_Connection_Test extends Doctrine_Connection_Common
 {
-    
+    /**
+     * @var string $driverName                  the name of this connection driver
+     */
+    protected $driverName = 'Mock';
 }
 
 class Doctrine_Adapter_Test implements Doctrine_Adapter_Interface

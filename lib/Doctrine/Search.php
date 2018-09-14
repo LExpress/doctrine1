@@ -311,11 +311,6 @@ class Doctrine_Search extends Doctrine_Record_Generator
 
         $className = $this->getOption('className');
 
-        $autoLoad = (bool) ($this->_options['generateFiles']);
-        if (class_exists($className, $autoLoad)) {
-            return false;
-        }
-
         // move any columns currently in the primary key to the end
         // So that 'keyword' is the first field in the table
         $previousIdentifier = array();
