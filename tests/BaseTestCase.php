@@ -78,6 +78,45 @@ class Doctrine_Base_TestCase extends Doctrine_UnitTestCase
         $this->assertTrue( class_exists('BaseConservativeModelLoadingUser', true));
     }
 
+    public function testCreateTableBindConnection()
+    {
+        Doctrine_Manager::getInstance()->openConnection('sqlite::memory:', 'test_bind_connection', false);
+
+        $table = Doctrine_Core::getTable('ModelBindConnection');
+        $this->assertEqual('test_bind_connection', $table->getConnection()->getName());
+    }
+
+    public function testCreateQueryBindConnection()
+    {
+        $manager = Doctrine_Manager::getInstance();
+        $currentConnection = $manager->getCurrentConnection();
+        $connection = $manager->openConnection('sqlite::memory:', 'test_bind_connection', false);
+
+        $query = Doctrine_Core::getTable('ModelBindConnection')->createQuery();
+
+        $refl = new ReflectionProperty($query, '_passedConn');
+        $refl->setAccessible(true);
+        $isPassedConn = $refl->getValue($query);
+        $refl->setAccessible(false);
+
+        // Assert that the connedtion of the query is not passed.
+        $this->assertFalse($isPassedConn);
+
+        $query->getSqlQuery();
+
+        // Assert that the current connection was not changed.
+        $this->assertTrue($currentConnection === $manager->getCurrentConnection());
+
+        // Assert that the model does not exists on the current connection.
+        $this->assertFalse($currentConnection->hasTable('ModelBindConnection'));
+
+        // Assert that the model does not exists on the bound connection.
+        $this->assertTrue($connection->hasTable('ModelBindConnection'));
+
+        // Assert that the connection of the query is the bound connection.
+        $this->assertEqual('test_bind_connection', $query->getConnection()->getName());
+    }
+
     public function testModelLoadingCacheInformation()
     {
         $models = Doctrine_Core::getLoadedModels();

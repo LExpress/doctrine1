@@ -552,9 +552,7 @@ class Doctrine_Manager extends Doctrine_Configurable implements Countable, Itera
      */
     public function getConnectionForComponent($componentName)
     {
-        Doctrine_Core::modelsAutoload($componentName);
-
-        if (isset($this->_bound[$componentName])) {
+        if ($this->hasConnectionForComponent($componentName)) {
             return $this->getConnection($this->_bound[$componentName]);
         }
 
@@ -569,6 +567,10 @@ class Doctrine_Manager extends Doctrine_Configurable implements Countable, Itera
      */
     public function hasConnectionForComponent($componentName = null)
     {
+        if (!Doctrine_Core::modelsAutoload($componentName)) {
+            class_exists($componentName); // Trigger autoloader to bind connection.
+        }
+
         return isset($this->_bound[$componentName]);
     }
 

@@ -20,5 +20,8 @@ matrix:
     - php: nightly
     - php: hhvm
 
+before_script:
+  - composer install
+
 script:
   - php -dshort_open_tag=Off -dmagic_quotes_gpc=Off tests/index.php
