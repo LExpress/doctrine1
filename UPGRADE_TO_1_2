@@ -812,7 +812,7 @@ fetching relationships.
 Now if we were to do the following PHP we'll get the SQL with an order by.
 
     [php]
-    $q = Doctrine::getTable('User')
+    $q = Doctrine_Core::getTable('User')
         ->createQuery('u')
         ->leftJoin('u.Articles a');
 
@@ -826,7 +826,7 @@ Now you should see this SQL query.
 Or if you lazily fetch the `Articles` they will be lazily loaded with the order by.
 
     [php]
-    $user = Doctrine::getTable('User')->find(1);
+    $user = Doctrine_Core::getTable('User')->find(1);
     $articles = $user->Articles;
 
 This would execute the following SQL query.

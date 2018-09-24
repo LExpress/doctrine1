@@ -34,19 +34,19 @@
 class Doctrine_Cache_Memcache extends Doctrine_Cache_Driver
 {
     /**
-     * @var Memcache $_memcache     memcache object
+     * @var Memcache $_memcached     memcache object
      */
-    protected $_memcache = null;
+    protected $_memcached = null;
 
     /**
      * constructor
      *
      * @param array $options        associative array of cache driver options
      */
-    public function __construct($options = array())
+    public function  __construct($options = array())
     {
-        if ( ! extension_loaded('memcache')) {
-            throw new Doctrine_Cache_Exception('In order to use Memcache driver, the memcache extension must be loaded.');
+        if ( ! extension_loaded('memcached')) {
+            throw new Doctrine_Cache_Exception('In order to use Memcached driver, the memcached extension must be loaded.');
         }
         parent::__construct($options);
 
@@ -59,16 +59,13 @@ class Doctrine_Cache_Memcache extends Doctrine_Cache_Driver
             $this->setOption('servers', $value);
         }
 
-        $this->_memcache = new Memcache;
+        $this->_memcached = new Memcached;
 
         foreach ($this->_options['servers'] as $server) {
-            if ( ! array_key_exists('persistent', $server)) {
-                $server['persistent'] = true;
-            }
             if ( ! array_key_exists('port', $server)) {
                 $server['port'] = 11211;
             }
-            $this->_memcache->addServer($server['host'], $server['port'], $server['persistent']);
+            $this->_memcached->addServer($server['host'], $server['port']);
         }
     }
 
@@ -80,7 +77,7 @@ class Doctrine_Cache_Memcache extends Doctrine_Cache_Driver
      */
     protected function _doFetch($id, $testCacheValidity = true)
     {
-        return $this->_memcache->get($id);
+        return $this->_memcached->get($id);
     }
 
     /**
@@ -91,7 +88,7 @@ class Doctrine_Cache_Memcache extends Doctrine_Cache_Driver
      */
     protected function _doContains($id)
     {
-        return (bool) $this->_memcache->get($id);
+        return (bool) $this->_memcached->get($id);
     }
 
     /**
@@ -105,13 +102,7 @@ class Doctrine_Cache_Memcache extends Doctrine_Cache_Driver
      */
     protected function _doSave($id, $data, $lifeTime = false)
     {
-        if ($this->_options['compression']) {
-            $flag = MEMCACHE_COMPRESSED;
-        } else {
-            $flag = 0;
-        }
-
-        return $this->_memcache->set($id, $data, $flag, $lifeTime);
+        return $this->_memcached->set($id, $data, $lifeTime);
     }
 
     /**
@@ -123,7 +114,7 @@ class Doctrine_Cache_Memcache extends Doctrine_Cache_Driver
      */
     protected function _doDelete($id)
     {
-        return $this->_memcache->delete($id);
+        return $this->_memcached->delete($id);
     }
 
     /**
@@ -134,11 +125,11 @@ class Doctrine_Cache_Memcache extends Doctrine_Cache_Driver
     protected function _getCacheKeys()
     {
         $keys = array();
-        $allSlabs = $this->_memcache->getExtendedStats('slabs');
+        $allSlabs = $this->_memcached->getExtendedStats('slabs');
 
         foreach ($allSlabs as $server => $slabs) {
             foreach (array_keys($slabs) as $slabId) {
-                $dump = $this->_memcache->getExtendedStats('cachedump', (int) $slabId);
+                $dump = $this->_memcached->getExtendedStats('cachedump', (int) $slabId);
                 foreach ($dump as $entries) {
                     if ($entries) {
                         $keys = array_merge($keys, array_keys($entries));
