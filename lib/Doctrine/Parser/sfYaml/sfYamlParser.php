@@ -8,8 +8,6 @@
  * file that was distributed with this source code.
  */
 
-require_once(dirname(__FILE__).'/sfYamlInline.php');
-
 if (!defined('PREG_BAD_UTF8_OFFSET_ERROR'))
 {
   define('PREG_BAD_UTF8_OFFSET_ERROR', 5);
@@ -56,6 +54,11 @@ class sfYamlParser
     $this->currentLineNb = -1;
     $this->currentLine = '';
     $this->lines = explode("\n", $this->cleanup($value));
+
+    if (function_exists('mb_detect_encoding') && false === mb_detect_encoding($value, 'UTF-8', true))
+    {
+      throw new InvalidArgumentException('The YAML value does not appear to be valid UTF-8.');
+    }
 
     if (function_exists('mb_internal_encoding') && ((int) ini_get('mbstring.func_overload')) & 2)
     {
@@ -168,7 +171,7 @@ class sfYamlParser
             else
             {
               // Associative array, merge
-              $merged = array_merge($merge, $parsed);
+              $merged = array_merge($merged, $parsed);
             }
 
             $isProcessed = $merged;
@@ -418,7 +421,7 @@ class sfYamlParser
     {
       $modifiers = isset($matches['modifiers']) ? $matches['modifiers'] : '';
 
-      return $this->parseFoldedScalar($matches['separator'], preg_replace('#\d+#', '', $modifiers), intval(abs($modifiers)));
+      return $this->parseFoldedScalar($matches['separator'], preg_replace('#\d+#', '', $modifiers), (int) abs($modifiers));
     }
     else
     {
