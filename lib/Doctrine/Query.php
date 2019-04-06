@@ -662,11 +662,13 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
 
                 $this->_neededTables[] = $tableAlias;
 
+                // This causes the column to be added twice, if the user defines a custom alias
+                // in the select statement.
                 // Fix for http://www.doctrine-project.org/jira/browse/DC-585
                 // Add selected columns to pending fields
-                if (preg_match('/^([^\(]+)\.(\'?)(.*?)(\'?)$/', $expression, $field)) {
+                /*if (preg_match('/^([^\(]+)\.(\'?)(.*?)(\'?)$/', $expression, $field)) {
                     $this->_pendingFields[$componentAlias][$alias] = $field[3];
-                }
+                }*/
 
             } else {
                 $e = explode('.', $terms[0]);
