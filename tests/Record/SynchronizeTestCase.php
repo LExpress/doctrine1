@@ -96,12 +96,17 @@ class Doctrine_Record_Synchronize_TestCase extends Doctrine_UnitTestCase
 
     public function testSynchronizeAfterSaveRecord()
     {
-        $user = Doctrine_Query::create()->from('User u, u.Group g, u.Email e, u.Phonenumber p')->fetchOne();
+        $user = Doctrine_Query::create()
+            ->from('User u, u.Group g, u.Email e, u.Phonenumber p')
+            ->addOrderBy('g.id') // The default fetch order is irrelevant here.
+            ->fetchOne()
+        ;
+
         $this->assertEqual($user->Phonenumber->count(), 1);
         $this->assertEqual($user->Phonenumber[0]->phonenumber, '555 321');
         $this->assertEqual($user->Email->address, 'johndow@mail.com');
-        $this->assertEqual($user->Group[0]->name, 'New Group');
-        $this->assertEqual($user->Group[1]->name, 'Group One');
+        $this->assertEqual($user->Group[0]->name, 'Group One');
+        $this->assertEqual($user->Group[1]->name, 'New Group');
     }
 
     public function testSynchronizeAddRecord()
@@ -119,9 +124,15 @@ class Doctrine_Record_Synchronize_TestCase extends Doctrine_UnitTestCase
 
     public function testSynchronizeAfterAddRecord()
     {
-        $user = Doctrine_Query::create()->from('User u, u.Email, u.Phonenumber')->fetchOne();
-        
+        $user = Doctrine_Query::create()
+            ->from('User u, u.Email, u.Phonenumber p')
+            ->addOrderBy('p.id') // The default fetch order is irrelevant here.
+            ->fetchOne()
+        ;
+
         $this->assertEqual($user->Phonenumber->count(), 2);
+
+        $this->assertEqual($user->Phonenumber[0]->phonenumber, '555 321');
         $this->assertEqual($user->Phonenumber[1]->phonenumber, '333 238');
     }
 

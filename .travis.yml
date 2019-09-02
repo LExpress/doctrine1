@@ -9,8 +9,10 @@ php:
   - 7.1
   - 7.2
   - 7.3
-  - hhvm
   - nightly
+
+services:
+  - mysql
 
 matrix:
   include:
@@ -19,7 +21,9 @@ matrix:
   fast_finish: true
   allow_failures:
     - php: nightly
-    - php: hhvm
+
+before_install:
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS test;'
 
 script:
-  - php -dshort_open_tag=Off -dmagic_quotes_gpc=Off tests/index.php
+  - "cd tests && php -dshort_open_tag=Off -dmagic_quotes_gpc=Off run.php"

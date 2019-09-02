@@ -92,21 +92,38 @@ class Doctrine_Base_TestCase extends Doctrine_UnitTestCase
         $this->assertTrue(file_exists($modelFiles['ConservativeModelLoadingContact']));
     }
 
-    public function testGetConnectionByTableName()
+    public function testGetConnectionByTableNameForTableWithOneModel()
     {
-        $connectionBefore = Doctrine_Core::getConnectionByTableName('entity');
+        $conn = null;
+        $thrownException = null;
 
-        Doctrine_Manager::connection('sqlite::memory:', 'test_memory');
-        Doctrine_Manager::getInstance()->bindComponent('Entity', 'test_memory');
+        try {
+            $connectionBefore = Doctrine_Core::getConnectionByTableName('account');
 
-        $connectionAfter = Doctrine_Core::getConnectionByTableName('entity');
+            $conn = Doctrine_Manager::connection('sqlite::memory:', 'test_memory');
+            Doctrine_Manager::getInstance()->bindComponent('Account', 'test_memory');
 
-        $this->assertEqual($connectionAfter->getName(), 'test_memory');
+            $connectionAfter = Doctrine_Core::getConnectionByTableName('account');
 
-        Doctrine_Manager::getInstance()->bindComponent('Entity', $connectionBefore->getName());
+            $this->assertEqual($connectionAfter->getName(), 'test_memory');
 
-        $connectionAfter = Doctrine_Core::getConnectionByTableName('entity');
-        
-        $this->assertEqual($connectionBefore->getName(), $connectionAfter->getName());
+            Doctrine_Manager::getInstance()->bindComponent('Account', $connectionBefore->getName());
+
+            $connectionAfter = Doctrine_Core::getConnectionByTableName('account');
+
+            $this->assertEqual($connectionBefore->getName(), $connectionAfter->getName());
+        } catch (Throwable $e) {
+            $thrownException = $e;
+        } catch (Exception $e) {
+            $thrownException = $e;
+        }
+
+        if (null !== $conn) {
+            Doctrine_Manager::getInstance()->closeConnection($conn);
+        }
+
+        if (null !== $thrownException) {
+            throw $thrownException;
+        }
     }
 }

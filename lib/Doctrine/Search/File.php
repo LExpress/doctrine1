@@ -77,6 +77,10 @@ class Doctrine_Search_File extends Doctrine_Search
                 continue;
             }
 
+            if ($file->isDir()) {
+                continue;
+            }
+
             $this->updateIndex(array('url' => $file->getPathName(),
                                      'content' => file_get_contents($file)));
         }

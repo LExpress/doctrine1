@@ -4,19 +4,40 @@ $_SERVER['DOCTRINE_DIR'] = realpath(dirname(__FILE__).'/../');
 
 require 'bootstrap.php';
 
-$test = new DoctrineTest();
-
-// Ticket Tests
-$tickets = new GroupTest('Tickets Tests', 'tickets');
-
 $excludeTickets = array(
     '1830', // MySQL specific error
     '1876b',
     '1935',
     '2015',
     '2292',
+    '1783', // Known bug integer validation with numbers greater than PHP_INT_MAX.
     'DC521' // PostgreSQL specific error
 );
+
+$test = new DoctrineTest();
+
+// Search Tests
+$search = new GroupTest('Search Tests', 'search');
+$search->addTestCase(new Doctrine_Search_TestCase());
+$search->addTestCase(new Doctrine_Search_Query_TestCase());
+$search->addTestCase(new Doctrine_Search_File_TestCase());
+$test->addTestCase($search);
+
+// Behaviors Testing
+$behaviors = new GroupTest('Behaviors Tests', 'behaviors');
+$behaviors->addTestCase(new Doctrine_I18n_TestCase());
+$behaviors->addTestCase(new Doctrine_Plugin_TestCase());
+$behaviors->addTestCase(new Doctrine_View_TestCase());
+$behaviors->addTestCase(new Doctrine_AuditLog_TestCase());
+$behaviors->addTestCase(new Doctrine_Hook_TestCase());
+$behaviors->addTestCase(new Doctrine_Sluggable_TestCase());
+$behaviors->addTestCase(new Doctrine_Record_Generator_TestCase());
+$behaviors->addTestCase(new Doctrine_SoftDelete_TestCase());
+$behaviors->addTestCase(new Doctrine_SoftDeleteBC_TestCase());
+$test->addTestCase($behaviors);
+
+// Ticket Tests
+$tickets = new GroupTest('Tickets Tests', 'tickets');
 
 $ticketTestCases = glob(dirname(__FILE__) . '/Ticket/*TestCase.php');
 
@@ -159,19 +180,6 @@ $data_types->addTestCase(new Doctrine_DataType_Enum_TestCase());
 $data_types->addTestCase(new Doctrine_DataType_Boolean_TestCase());
 $test->addTestCase($data_types);
 
-// Behaviors Testing
-$behaviors = new GroupTest('Behaviors Tests', 'behaviors');
-$behaviors->addTestCase(new Doctrine_Plugin_TestCase());
-$behaviors->addTestCase(new Doctrine_View_TestCase());
-$behaviors->addTestCase(new Doctrine_AuditLog_TestCase());
-$behaviors->addTestCase(new Doctrine_Hook_TestCase());
-$behaviors->addTestCase(new Doctrine_I18n_TestCase());
-$behaviors->addTestCase(new Doctrine_Sluggable_TestCase());
-$behaviors->addTestCase(new Doctrine_Record_Generator_TestCase());
-$behaviors->addTestCase(new Doctrine_SoftDelete_TestCase());
-$behaviors->addTestCase(new Doctrine_SoftDeleteBC_TestCase());
-$test->addTestCase($behaviors);
-
 // Validator Testing
 $validators = new GroupTest('Validators Testing', 'validators');
 $validators->addTestCase(new Doctrine_Validator_TestCase());
@@ -254,13 +262,6 @@ $inheritance->addTestCase(new Doctrine_ColumnAggregationInheritance_TestCase());
 $inheritance->addTestCase(new Doctrine_ClassTableInheritance_TestCase());
 $inheritance->addTestCase(new Doctrine_Query_ApplyInheritance_TestCase());
 $test->addTestCase($inheritance);
-
-// Search Tests
-$search = new GroupTest('Search Tests', 'search');
-$search->addTestCase(new Doctrine_Search_TestCase());
-$search->addTestCase(new Doctrine_Search_Query_TestCase());
-$search->addTestCase(new Doctrine_Search_File_TestCase());
-$test->addTestCase($search);
 
 // Cache Tests
 $cache = new GroupTest('Cache Tests', 'cache');

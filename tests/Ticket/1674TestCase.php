@@ -42,7 +42,13 @@ class Doctrine_Ticket_1674_TestCase extends Doctrine_UnitTestCase
             ->limit(1)
             ->execute();
 
-        $xml = $users->exportTo('xml'); 
+        $xml = $users->exportTo('xml');
+
+        // Normalize XML documment.
+        $dom = new DOMDocument('1.0', 'utf-8');
+        $dom->loadXML($xml);
+        $xml = $dom->saveXML();
+
         $this->assertEqual($xml, '<?xml version="1.0" encoding="utf-8"?>
 <data><User id="4" type="0" email_id="1"><name>zYne</name><loginname/><password/><created/><updated/><Phonenumber><Phonenumber id="2" entity_id="4"><phonenumber>123 123</phonenumber><User/></Phonenumber></Phonenumber></User></data>
 ');

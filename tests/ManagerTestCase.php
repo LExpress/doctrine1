@@ -164,14 +164,30 @@ class Doctrine_Manager_TestCase extends Doctrine_UnitTestCase {
     
     public function testConnectionInformationDecoded()
     {
+      $conn = null;
+      $thrownException = null;
       $dsn = 'mysql://' . urlencode('test/t') . ':' . urlencode('p@ssword') . '@localhost/' . urlencode('db/name');
 
-      $conn = Doctrine_Manager::connection($dsn);
-      $options = $conn->getOptions();
+      try {
+          $conn = Doctrine_Manager::connection($dsn);
+          $options = $conn->getOptions();
 
-      $this->assertEqual($options['username'], 'test/t');
-      $this->assertEqual($options['password'], 'p@ssword');
-      $this->assertEqual($options['dsn'], 'mysql:host=localhost;dbname=db/name');
+          $this->assertEqual($options['username'], 'test/t');
+          $this->assertEqual($options['password'], 'p@ssword');
+          $this->assertEqual($options['dsn'], 'mysql:host=localhost;dbname=db/name');
+      } catch (Throwable $e) {
+          $thrownException = $e;
+      } catch (Exception $e) {
+          $thrownException = $e;
+      }
+
+      if (null !== $conn) {
+          Doctrine_Manager::getInstance()->closeConnection($conn);
+      }
+
+      if (null !== $thrownException) {
+          throw $thrownException;
+      }
     }
     public function prepareData() { }
     public function prepareTables() { }
