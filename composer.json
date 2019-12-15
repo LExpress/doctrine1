@@ -1,5 +1,5 @@
 {
-    "name": "friendsofsymfony1/doctrine1",
+    "name": "JamesAndJamesFulfilment/doctrine1",
     "type": "library",
     "description": "PHP Database ORM for Symfony1. Do NOT use for new projects: please move to a newest Symfony release and Doctrine2",
     "keywords": ["orm", "database", "symfony1", "doctrine1"],
@@ -16,7 +16,7 @@
         },
         {
             "name": "Doctrine1 Contributors",
-            "homepage": "https://github.com/FriendsOfSymfony1/doctrine1/graphs/contributors"
+            "homepage": "https://github.com/JamesAndJamesFulfilment/doctrine1/graphs/contributors"
         }
     ],
     "require": {
@@ -25,8 +25,8 @@
         "ext-pdo": "*"
     },
     "support": {
-        "issues": "https://github.com/FriendsOfSymfony1/doctrine1/issues",
-        "source": "https://github.com/FriendsOfSymfony1/doctrine1"
+        "issues": "https://github.com/JamesAndJamesFulfilment/doctrine1/issues",
+        "source": "https://github.com/JamesAndJamesFulfilment/doctrine1"
     },
     "autoload": {
         "psr-0": {
