@@ -209,7 +209,7 @@ abstract class Doctrine_Query_Abstract
      */
     protected $_queryComponents = array();
 
-	/**
+    /**
      * Stores the root DQL alias
      *
      * @var string
@@ -829,6 +829,17 @@ abstract class Doctrine_Query_Abstract
         }
 
         return $this->_rootAlias;
+    }
+
+    /**
+     * setRootAlias
+     * updates the alias of the root component
+     *
+     * @return string
+     */
+    public function setRootAlias($alias)
+    {
+        return $this->_rootAlias = $alias;
     }
 
     /**
