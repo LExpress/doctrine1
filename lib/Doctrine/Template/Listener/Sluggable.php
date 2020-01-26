@@ -103,7 +103,7 @@ class Doctrine_Template_Listener_Sluggable extends Doctrine_Record_Listener
     {
         if (empty($this->_options['fields'])) {
             if (is_callable($this->_options['provider'])) {
-            	$value = call_user_func($this->_options['provider'], $record);
+                $value = call_user_func($this->_options['provider'], $record);
             } else if (method_exists($record, 'getUniqueSlug')) {
                 $value = $record->getUniqueSlug($record);
             } else {
@@ -117,9 +117,9 @@ class Doctrine_Template_Listener_Sluggable extends Doctrine_Record_Listener
             $value = substr($value, 0, -1);
         }
 
-    	if ($this->_options['unique'] === true) {
-    		return $this->getUniqueSlug($record, $value);
-    	}
+        if ($this->_options['unique'] === true) {
+          return $this->getUniqueSlug($record, $value);
+        }
 
         return call_user_func_array($this->_options['builder'], array($value, $record));
     }
@@ -171,12 +171,18 @@ class Doctrine_Template_Listener_Sluggable extends Doctrine_Record_Listener
         $proposal =  call_user_func_array($this->_options['builder'], array($slugFromFields, $record));
         $slug = $proposal;
 
+        if (strlen($slug) == 0)
+        { // JS hack to seed blank slugs with something useable until we get a translit fix
+          $slug = $proposal = 'ref';
+        }
+
         $whereString = 'r.' . $name . ' LIKE ?';
         $whereParams = array($proposal.'%');
 
         if ($record->exists()) {
             $identifier = $record->identifier();
-            $whereString .= ' AND r.' . implode(' != ? AND r.', $table->getIdentifierColumnNames()) . ' != ?';
+            // JS fix from http://www.doctrine-project.org/jira/browse/DC-728
+            $whereString .= ' AND (r.' . implode(' != ? OR r.', $table->getIdentifierColumnNames()) . ' != ?)';
             $whereParams = array_merge($whereParams, array_values($identifier));
         }
 
@@ -204,9 +210,9 @@ class Doctrine_Template_Listener_Sluggable extends Doctrine_Record_Listener
 
         // We need to introspect SoftDelete to check if we are not disabling unique records too
         if ($table->hasTemplate('Doctrine_Template_SoftDelete')) {
-	        $softDelete = $table->getTemplate('Doctrine_Template_SoftDelete');
+            $softDelete = $table->getTemplate('Doctrine_Template_SoftDelete');
 
-	        // we have to consider both situations here
+            // we have to consider both situations here
             if ($softDelete->getOption('type') == 'boolean') {
                 $conn = $query->getConnection();
 
