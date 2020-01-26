@@ -2036,11 +2036,11 @@ abstract class Doctrine_Query_Abstract
      * @throws Doctrine_Query_Exception
      *
      * @param Doctrine_Cache_Interface|bool $driver     cache driver
-     * @param integer                       $timeToLive how long the cache entry is valid
+     * @param integer                       $timeToLive how long the cache entry is valid (default 9 hrs)
      *
      * @return $this this object
      */
-    public function useQueryCache($driver = true, $timeToLive = null)
+    public function useQueryCache($driver = true, $timeToLive = 32400)
     {
         if ($driver !== null && $driver !== true && $driver !== false && ! ($driver instanceOf Doctrine_Cache_Interface)) {
             $msg = 'First argument should be instance of Doctrine_Cache_Interface or null.';

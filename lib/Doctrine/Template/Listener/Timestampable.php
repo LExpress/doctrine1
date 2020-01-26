@@ -54,6 +54,7 @@ class Doctrine_Template_Listener_Timestampable extends Doctrine_Record_Listener
      * Set the created and updated Timestampable columns when a record is inserted
      *
      * @param Doctrine_Event $event
+     * @return void
      */
     public function preInsert(Doctrine_Event $event)
     {

@@ -2974,6 +2974,174 @@ class Doctrine_Table extends Doctrine_Configurable implements Countable, Seriali
         throw new Doctrine_Table_Exception(sprintf('Unknown method %s::%s', get_class($this), $method));
     }
 
+    /**
+     * Given a current loaded model, re-query that model and hydrate the given relationships
+     *
+     * @param $object_reference
+     * @param array $relationships
+     * @throws Exception
+     *
+     * @return object
+     */
+    public static function getHydrated($object_reference, $relationships = [])
+    {
+        // If we don't have an object which implement getId, just return it
+        if (empty($relationships) || !($object_reference instanceof sixDoctrineRecord)) {
+            return $object_reference;
+        }
+
+        $table_name = get_class($object_reference);
+        $query = self::getHydrationQuery($table_name, $relationships);
+        $query->where('q.id = ?', $object_reference->getId());
+
+        $result = $query->fetchOne();
+        // Ensure we are returning a ref to something.
+        return $result ? $result : $object_reference;
+    }
+
+    /**
+     * Given a collection of items or ids, hydrate them with the relationships required.
+     * This can be a doctrine collection or a mix of ids + objects.
+     *
+     * @param $table_name
+     * @param $collection
+     * @param array $relationships
+     * @return mixed
+     * @throws Exception
+     */
+    public static function getHydratedFromCollection($table_name, $collection, $relationships = [])
+    {
+        if (!is_array($collection) && !is_numeric($collection)) {
+            return self::getHydrated($collection, $relationships);
+        }
+
+        if (empty($table_name)) {
+            throw new Exception("Must provide a table name to select results from.");
+        }
+
+        if (empty($collection) || empty($relationships)) {
+            return $collection;
+        }
+
+        $ids_to_hydrate = [];
+        $hydrated       = [];
+
+        foreach ($collection as $index => $item) {
+            if (is_numeric($item)) {
+                // if this is just an ID, lets attempt to add it to the hydration query
+                $ids_to_hydrate[] = $item;
+            } else {
+                if (is_null($item->getId())) {
+                    // If we can't get an ID (temp object) then we will add the current model back
+                    $hydrated["null_{$index}"] = $item;
+                } else {
+                    // Otherwise, we will attempt to hydrate it in the query
+                    $ids_to_hydrate[] = $item->getId();
+                }
+            }
+        }
+
+        // Prevent selecting EVERYTHING in the root table.
+        if (empty($ids_to_hydrate)) {
+            return $collection;
+        }
+
+        $query = self::getHydrationQuery($table_name, $relationships);
+        $results = $query->whereIn('id', $ids_to_hydrate);
+        foreach ($results as $result) {
+            if (!isset($hydrated[$result->getId()])) {
+                $hydrated[$result->getId()] = $result;
+            }
+        }
+
+        return $hydrated;
+    }
+
+    /**
+     * Prepares the hydration query to either query for a single hydrated
+     * entity, or a collection of hydrated entities.
+     *
+     * @param $root_table_name
+     * @param array $relationships
+     * @return Doctrine_Query
+     * @throws Exception
+     */
+    private static function getHydrationQuery($root_table_name, $relationships = [])
+    {
+        $query = Doctrine::getTable($root_table_name)
+            ->createQuery('q')
+            ->select('q.*');
+
+        foreach ($relationships as $entity => $alias) {
+            if ($alias == 'q') {
+                throw new Exception("Please provide a different alias for {$entity} as {$alias} is reserved as the root alias.");
+            }
+
+            $root = 'q';
+
+            if (is_array($alias)) {
+                $join_info = $alias;
+                if (!isset($join_info['from']) || !isset($join_info['to'])) {
+                    throw new Exception("Must provide a from and to relation for this join.");
+                }
+
+                $alias  = $join_info['to']['alias'];
+                $entity = $join_info['to']['entity'];
+                $root   = $join_info['from'];
+            }
+
+            $query
+                ->addSelect("{$alias}.*")
+                ->leftJoin("{$root}.{$entity} {$alias}");
+        }
+
+        return $query;
+    }
+
+    /**
+     * See documentation on Epoch.class.php for parameter details
+     *
+     * @param int $duration
+     * @param string $interval_type
+     * @param string $timestamp_field
+     * @param array $query_constraints
+     *
+     * @throws sfException - one of the provided types was invalid
+     * @return int
+     */
+    public static function getEpoch($duration = 1, $interval_type = Interval::YEAR, $timestamp_field = 'created_at', $query_constraints = [])
+    {
+        $entity = str_replace('Table', '', static::class);
+        return Epoch::generate($entity, $duration, $interval_type, $timestamp_field, $query_constraints);
+    }
+
+    /**
+     * Most of the time this is faster than doing a count query, this is because we just
+     * return the PDO cursor and fetch the number of rows loaded into it.
+     *
+     * @param Doctrine_Query $query
+     * @param int $max_limit - If we know this result set is going to be huge, we can set an upper limit
+     *                         to the amount of rows to return (this will then let us tell the user
+     *                         that there are at least X rows remaining)
+     * @return int
+     * @throws Doctrine_Connection_Exception
+     */
+    public static function getTotalResults(Doctrine_Query $query, $max_limit = false)
+    {
+        $params = $query->getParams();
+        $query
+            ->limit($max_limit)
+            ->offset(false)
+            ->removeSqlQueryPart('orderby');
+
+        $results = Doctrine_Manager::getInstance()->getCurrentConnection()->execute($query->getSqlQuery(), $params['where']);
+        if (empty($results) || !method_exists($results, 'rowCount')) {
+            return 0;
+        }
+
+        return $results->rowCount();
+    }
+
     public function serialize()
     {
         $options = $this->_options;
