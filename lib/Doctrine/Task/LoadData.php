@@ -36,7 +36,7 @@ class Doctrine_Task_LoadData extends Doctrine_Task
            $requiredArguments    =   array('data_fixtures_path' =>  'Specify the complete path to load the yaml data fixtures files from.',
                                            'models_path'        =>  'Specify path to your Doctrine_Record definitions.'),
            $optionalArguments    =   array('append'             =>  'Whether or not to append the data',
-                                           'charset'            =>  'Specify the charset to use for yaml laod');
+                                           'charset'            =>  'Specify the charset to use for yaml load');
 
     public function execute()
     {
