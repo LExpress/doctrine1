@@ -77,7 +77,7 @@ class Doctrine_Task_TestCase extends Doctrine_UnitTestCase
      */
     protected function loadPhpFixture($basename)
     {
-        require_once(dirname(__FILE__) . '/TaskTestCase/' . $basename);
+        require_once(__DIR__ . '/TaskTestCase/' . $basename);
     }
 
     public function testSettasknameThrowsAnExceptionIfTheTaskNameIsInvalid()

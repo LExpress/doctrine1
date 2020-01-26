@@ -42,7 +42,7 @@ class Doctrine_Ticket_DC95_TestCase extends Doctrine_UnitTestCase
 
     public function testClassExistsAfterImport()
     {
-        Doctrine_Core::setModelsDirectory(dirname(__FILE__) . '/DC95/models');
+        Doctrine_Core::setModelsDirectory(__DIR__ . '/DC95/models');
 
         $import = new Doctrine_Import_Schema();
         $import->setOptions(array(
@@ -52,8 +52,8 @@ class Doctrine_Ticket_DC95_TestCase extends Doctrine_UnitTestCase
             'classPrefix' => 'DC95_',
             'classPrefixFiles' => true
         ));
-        $modelsPath = dirname(__FILE__) . '/DC95/models';
-        $import->importSchema(dirname(__FILE__) . '/DC95/schema.yml', 'yml', $modelsPath);
+        $modelsPath = __DIR__ . '/DC95/models';
+        $import->importSchema(__DIR__ . '/DC95/schema.yml', 'yml', $modelsPath);
 
         /*
         $this->assertTrue(file_exists($modelsPath . '/DC95/Base/Article.php'));
@@ -63,6 +63,6 @@ class Doctrine_Ticket_DC95_TestCase extends Doctrine_UnitTestCase
         */
 
         Doctrine_Core::setModelsDirectory(null);
-        Doctrine_Lib::removeDirectories(dirname(__FILE__) . '/DC95/models');
+        Doctrine_Lib::removeDirectories(__DIR__ . '/DC95/models');
     }
 }

@@ -179,7 +179,7 @@ class UnitTestCase
 
     public function getPassesAndFailsCachePath()
     {
-        $dir = dirname(__FILE__) . '/doctrine_tests';
+        $dir = __DIR__ . '/doctrine_tests';
         if ( ! is_dir($dir)) {
             mkdir($dir, 0777, true);
         }

@@ -34,7 +34,7 @@ class Doctrine_Import_Builder_TestCase extends Doctrine_UnitTestCase
 {
     public function testInheritanceGeneration()
     {
-        $path = dirname(__FILE__) . '/import_builder_test';
+        $path = __DIR__ . '/import_builder_test';
 
         $import = new Doctrine_Import_Schema();
         $import->setOption('generateTableClasses', true);

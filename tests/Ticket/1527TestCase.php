@@ -50,7 +50,7 @@ END;
         $schema = $import->buildSchema($yml, 'yml');
         $this->assertEqual($schema['Ticket_1527_User']['columns']['username']['extra']['test'], '123');
 
-        $path = dirname(__FILE__) . '/../tmp';
+        $path = __DIR__ . '/../tmp';
         $import->importSchema($yml, 'yml', $path);
         
         require_once($path . '/generated/BaseTicket_1527_User.php');

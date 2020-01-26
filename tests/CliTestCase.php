@@ -57,7 +57,7 @@ class Doctrine_Cli_TestCase extends Doctrine_UnitTestCase
     protected function getFixturesPath()
     {
         if (! isset($this->fixturesPath)) {
-            $this->fixturesPath = dirname(__FILE__) . '/CliTestCase';
+            $this->fixturesPath = __DIR__ . '/CliTestCase';
         }
 
         return $this->fixturesPath;

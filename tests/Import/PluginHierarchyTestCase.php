@@ -55,7 +55,7 @@ WikiTest:
 END;
         
         file_put_contents('wiki.yml', $yml);
-        $path = dirname(__FILE__) . '/tmp/import_builder_test';
+        $path = __DIR__ . '/tmp/import_builder_test';
 
         $import = new Doctrine_Import_Schema();
         $import->setOption('generateTableClasses', true);

@@ -34,9 +34,9 @@ class Doctrine_Migration_Diff_TestCase extends Doctrine_UnitTestCase
 {
     public function testTest()
     {
-        $from = dirname(__FILE__) . '/Diff/schema/from.yml';
-        $to = dirname(__FILE__) . '/Diff/schema/to.yml';
-        $migrationsPath = dirname(__FILE__) . '/Diff/migrations';
+        $from = __DIR__ . '/Diff/schema/from.yml';
+        $to = __DIR__ . '/Diff/schema/to.yml';
+        $migrationsPath = __DIR__ . '/Diff/migrations';
         Doctrine_Lib::makeDirectories($migrationsPath);
 
         $diff = new Doctrine_Migration_Diff($from, $to, $migrationsPath);

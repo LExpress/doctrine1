@@ -48,7 +48,7 @@ class Doctrine_Search_Indexer_TestCase extends Doctrine_UnitTestCase
 
         $indexer = new Doctrine_Search_Indexer();
 
-        $indexer->indexDirectory(dirname(__FILE__) . DIRECTORY_SEPARATOR . '_files');
+        $indexer->indexDirectory(__DIR__ . DIRECTORY_SEPARATOR . '_files');
     }
     
     public function testIndexerAddsFiles()

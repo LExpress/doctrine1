@@ -46,7 +46,7 @@ class Doctrine_Search_File_TestCase extends Doctrine_UnitTestCase
 
     public function testIndexDirectoryIndexesAllFiles()
     {
-        $this->_search->indexDirectory(dirname(__FILE__) . DIRECTORY_SEPARATOR . '_files');
+        $this->_search->indexDirectory(__DIR__ . DIRECTORY_SEPARATOR . '_files');
 
         $resultSet = $this->_search->search('dbms');
         

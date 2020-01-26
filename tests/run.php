@@ -1,6 +1,6 @@
 <?php
 
-$_SERVER['DOCTRINE_DIR'] = realpath(dirname(__FILE__).'/../');
+$_SERVER['DOCTRINE_DIR'] = realpath(__DIR__.'/../');
 
 require 'bootstrap.php';
 
@@ -18,7 +18,7 @@ $excludeTickets = array(
     'DC521' // PostgreSQL specific error
 );
 
-$ticketTestCases = glob(dirname(__FILE__) . '/Ticket/*TestCase.php');
+$ticketTestCases = glob(__DIR__ . '/Ticket/*TestCase.php');
 
 foreach ($ticketTestCases as $testCase)
 {

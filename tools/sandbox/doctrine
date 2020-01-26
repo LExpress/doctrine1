@@ -1,4 +1,4 @@
 #!/usr/bin/env php
 <?php
-chdir(dirname(__FILE__));
+chdir(__DIR__);
 include('doctrine.php');

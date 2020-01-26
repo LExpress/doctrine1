@@ -32,10 +32,10 @@
  * @version     $Revision$
  */
 
-require_once dirname(__FILE__) . '/DoctrineTest/UnitTestCase.php';
-require_once dirname(__FILE__) . '/DoctrineTest/GroupTest.php';
-require_once dirname(__FILE__) . '/DoctrineTest/Doctrine_UnitTestCase.php';
-require_once dirname(__FILE__) . '/DoctrineTest/Reporter.php';
+require_once __DIR__ . '/DoctrineTest/UnitTestCase.php';
+require_once __DIR__ . '/DoctrineTest/GroupTest.php';
+require_once __DIR__ . '/DoctrineTest/Doctrine_UnitTestCase.php';
+require_once __DIR__ . '/DoctrineTest/Reporter.php';
 
 class DoctrineTest
 {
@@ -75,13 +75,13 @@ class DoctrineTest
     {
         $testGroup = $this->testGroup;
         if (PHP_SAPI === 'cli') {
-            require_once(dirname(__FILE__) . '/DoctrineTest/Reporter/Cli.php');
+            require_once(__DIR__ . '/DoctrineTest/Reporter/Cli.php');
             $reporter = new DoctrineTest_Reporter_Cli();
             $argv = $_SERVER['argv'];
             array_shift($argv);
             $options = $this->parseOptions($argv);
         } else {
-            require_once(dirname(__FILE__) . '/DoctrineTest/Reporter/Html.php');
+            require_once(__DIR__ . '/DoctrineTest/Reporter/Html.php');
             $options = $_GET;
             if (isset($options['filter'])) {
                 if ( ! is_array($options['filter'])) {
@@ -148,7 +148,7 @@ class DoctrineTest
              * somebody could give it a try. Just replace this block of code
              * with the one below
              *
-             define('PHPCOVERAGE_HOME', dirname(dirname(__FILE__)) . '/vendor/spikephpcoverage');
+             define('PHPCOVERAGE_HOME', dirname(__DIR__) . '/vendor/spikephpcoverage');
             require_once PHPCOVERAGE_HOME . '/CoverageRecorder.php';
             require_once PHPCOVERAGE_HOME . '/reporter/HtmlCoverageReporter.php';
 
@@ -170,8 +170,8 @@ class DoctrineTest
             $ret = $testGroup->run($reporter, $filter);
             $result['coverage'] = xdebug_get_code_coverage();
             xdebug_stop_code_coverage();
-            file_put_contents(dirname(__FILE__) . '/coverage/coverage.txt', serialize($result));
-            require_once dirname(__FILE__) . '/DoctrineTest/Coverage.php';
+            file_put_contents(__DIR__ . '/coverage/coverage.txt', serialize($result));
+            require_once __DIR__ . '/DoctrineTest/Coverage.php';
             $coverageGeneration = new DoctrineTest_Coverage();
             $coverageGeneration->generateReport();
             return $ret;
@@ -203,7 +203,7 @@ class DoctrineTest
      */
     public function requireModels()
     {
-        $models = new DirectoryIterator(dirname(__FILE__) . '/models/');
+        $models = new DirectoryIterator(__DIR__ . '/models/');
 
         foreach($models as $key => $file) {
             if ($file->isFile() && ! $file->isDot()) {

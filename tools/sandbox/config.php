@@ -34,7 +34,7 @@
  * @author      Jonathan H. Wage <jwage@mac.com>
  */
 
-define('SANDBOX_PATH', dirname(__FILE__));
+define('SANDBOX_PATH', __DIR__);
 define('DOCTRINE_PATH', dirname(dirname(SANDBOX_PATH)) . DIRECTORY_SEPARATOR . 'lib');
 define('DATA_FIXTURES_PATH', SANDBOX_PATH . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'fixtures');
 define('MODELS_PATH', SANDBOX_PATH . DIRECTORY_SEPARATOR . 'models');
@@ -46,7 +46,7 @@ define('DSN', 'sqlite:///' . DB_PATH);
 
 require_once(DOCTRINE_PATH . DIRECTORY_SEPARATOR . 'Doctrine.php');
 
-Doctrine_Core::setExtensionsPath(dirname(__FILE__).'/extensions');
+Doctrine_Core::setExtensionsPath(__DIR__.'/extensions');
 
 spl_autoload_register(array('Doctrine', 'autoload'));
 spl_autoload_register(array('Doctrine', 'modelsAutoload'));

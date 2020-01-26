@@ -34,12 +34,12 @@ class Doctrine_Ticket_DC292_TestCase extends Doctrine_UnitTestCase
 {
     public function testTest()
     {
-        $dir = dirname(__FILE__) . '/DC292/migrations';
+        $dir = __DIR__ . '/DC292/migrations';
         if ( ! is_dir($dir)) {
             mkdir($dir, 0777, true);
         }
         $migration = new Doctrine_Migration($dir);
-        $diff = new Doctrine_Migration_Diff(dirname(__FILE__) . '/DC292/from.yml', dirname(__FILE__) . '/DC292/to.yml', $migration);
+        $diff = new Doctrine_Migration_Diff(__DIR__ . '/DC292/from.yml', __DIR__ . '/DC292/to.yml', $migration);
         $changes = $diff->generateChanges();
         $this->assertEqual(2, count($changes['created_columns']['article']));
         $this->assertTrue(isset($changes['created_columns']['article']['created_at']));

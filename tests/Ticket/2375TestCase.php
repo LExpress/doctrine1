@@ -34,8 +34,8 @@ class Doctrine_Ticket_2375_TestCase extends Doctrine_UnitTestCase
 {
     public function testTest()
     {
-        $models1Dir = dirname(__FILE__) . '/2375/models1';
-        $models2Dir = dirname(__FILE__) . '/2375/models2';
+        $models1Dir = __DIR__ . '/2375/models1';
+        $models2Dir = __DIR__ . '/2375/models2';
 
         // try loading a couple initial models
 
