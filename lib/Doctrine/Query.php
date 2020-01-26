@@ -1369,7 +1369,7 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
         }
 
         $q .= ( ! empty($this->_sqlParts['groupby'])) ? ' GROUP BY ' . implode(', ', $this->_sqlParts['groupby'])  : '';
-        $q .= ( ! empty($this->_sqlParts['having'])) ?  ' HAVING '   . implode(' AND ', $this->_sqlParts['having']): '';
+        $q .= ( ! empty($this->_sqlParts['having'])) ?  ' HAVING '   . implode(self::HAVING_JOINER, $this->_sqlParts['having']): '';
         $q .= ( ! empty($this->_sqlParts['orderby'])) ? ' ORDER BY ' . implode(', ', $this->_sqlParts['orderby'])  : '';
 
         if ($modifyLimit) {
@@ -1498,7 +1498,7 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
         // all conditions must be preserved in subquery
         $subquery .= ( ! empty($this->_sqlParts['where']))?   ' WHERE '    . implode(' ', $this->_sqlParts['where'])  : '';
         $subquery .= ( ! empty($this->_sqlParts['groupby']))? ' GROUP BY ' . implode(', ', $this->_sqlParts['groupby'])   : '';
-        $subquery .= ( ! empty($having))?  ' HAVING '   . implode(' AND ', $having) : '';
+        $subquery .= ( ! empty($having))?  ' HAVING '   . implode(self::HAVING_JOINER, $having) : '';
         $subquery .= ( ! empty($orderby))? ' ORDER BY ' . implode(', ', $orderby)  : '';
 
         if (($driverName == 'oracle' || $driverName == 'oci' || $driverName == 'oci8') && $this->_isOrderedByJoinedColumn()) {
@@ -2069,7 +2069,7 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
         $groupby = ( ! empty($groupby)) ? ' GROUP BY ' . implode(', ', $groupby) : '';
 
         // Build the having clause
-        $having = ( ! empty($having)) ? ' HAVING ' . implode(' AND ', $having) : '';
+        $having = ( ! empty($having)) ? ' HAVING ' . implode(self::HAVING_JOINER, $having) : '';
 
         // Building the from clause and finishing query
         if (count($this->_queryComponents) == 1 && empty($having)) {
