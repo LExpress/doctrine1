@@ -126,7 +126,7 @@ class Doctrine_Formatter extends Doctrine_Connection_Module
         }
         $tmp = $this->conn->identifier_quoting;
 
-        // Avoid double passing
+        // Avoid double parsing
         // http://www.doctrine-project.org/jira/browse/DC-972
         if ((substr($str, 0, 1) === $tmp['start']) && (substr($str, -1) === $tmp['end'])) {
             return $str;
