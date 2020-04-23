@@ -1126,7 +1126,7 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
 
     /**
      * builds the sql query from the given parameters and applies things such as
-     * column aggregation inheritance and limit subqueries if needed
+     * column aggregation, indexes, inheritance and limit subqueries if needed
      *
      * @param array $params             an array of prepared statement params (needed only in mysql driver
      *                                  when limit subquery algorithm is used)
@@ -1143,11 +1143,12 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
 
         if ($this->_state !== self::STATE_DIRTY) {
             $this->fixArrayParameterValues($this->getInternalParams());
-
-            // Return compiled SQL
-            return $this->_sql;
+            $sql = $this->_sql;
+        } else {
+            $sql = $this->buildSqlQuery($limitSubquery);
         }
-        return $this->buildSqlQuery($limitSubquery);
+        // Apply any indexes which have been specified (if none specified, return the query)
+        return $this->_applyIndexesToQuery($sql);
     }
 
     /**
