@@ -283,7 +283,7 @@ class Doctrine_RawSql extends Doctrine_Query_Abstract
         if ( ! empty($string)) {
             array_pop($this->_sqlParts['where']);
         }
-        return $q;
+        return $this->_applyIndexesToQuery($q);
     }
 
 	/**
@@ -326,7 +326,7 @@ class Doctrine_RawSql extends Doctrine_Query_Abstract
             array_pop($this->_sqlParts['where']);
         }
 
-        return $q;
+        return $this->_applyIndexesToQuery($q);
     }
 
 	/**

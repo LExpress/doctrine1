@@ -1517,6 +1517,8 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
 
         // add driver specific limit clause
         $subquery = $this->_conn->modifyLimitSubquery($table, $subquery, $this->_sqlParts['limit'], $this->_sqlParts['offset']);
+        // apply any outstanding indexes to the subquery before we rebuild the query parts using new Aliases
+        $subquery = $this->_applyIndexesToQuery($subquery);
 
         $parts = $this->_tokenizer->quoteExplode($subquery, ' ', "'", "'");
 
@@ -1586,6 +1588,7 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
         }
 
         $subquery = implode(' ', $parts);
+
         return $subquery;
     }
 
@@ -2112,7 +2115,7 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
                 . $this->_conn->quoteIdentifier('dctrn_count_query');
         }
 
-        return $q;
+        return $this->_applyIndexesToQuery($q);
     }
 
     /**
