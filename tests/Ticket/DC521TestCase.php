@@ -140,3 +140,4 @@ class Doctrine_Ticket_DC521_TestCase extends Doctrine_UnitTestCase
     	   $this->driverName = null;
     	   parent::tearDown();
     }
+}
