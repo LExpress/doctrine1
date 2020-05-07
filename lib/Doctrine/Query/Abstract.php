@@ -34,6 +34,13 @@
 abstract class Doctrine_Query_Abstract
 {
     /**
+     * Supported index types.
+     */
+    const INDEX_IGNORE = 'IGNORE INDEX';
+    const INDEX_FORCE  = 'FORCE INDEX';
+    const INDEX_USE    = 'USE INDEX';
+
+    /**
      * QUERY TYPE CONSTANTS
      */
 
@@ -278,6 +285,25 @@ abstract class Doctrine_Query_Abstract
      * @var bool Boolean variable for whether the limitSubquery method of accessing tables via a many relationship should be used.
      */
     protected $disableLimitSubquery = false;
+
+    /**
+     * An array of index names to use, keyed by alias.
+     *
+     * @var array
+     */
+    protected $_index_parts = [];
+
+    /**
+     * By default, index merging is not enabled, in this case, if another ->withIndexes
+     * method is called on the query, and adds a new index for the type (USE, FORCE, IGNORE)
+     * then the indexes will be overwritten
+     *
+     * When index merging is enabled, any new indexes applied at an index type will
+     * be merged with the existing index(s) for that type.
+     *
+     * @var bool
+     */
+    protected $_allow_index_merging = false;
 
     /**
      * Constructor.
@@ -2220,6 +2246,263 @@ abstract class Doctrine_Query_Abstract
 
         $this->_state = Doctrine_Query::STATE_DIRTY;
         return $this;
+    }
+
+    /**
+     * By default, index merging is not allowed, any new indexes specified for an
+     * existing alias will be overwritten with the new value.
+     *
+     * There may be a case where you need to extend an existing Doctrine query
+     * but also apply some additional indexes without modifying the base query
+     * (as this could have performance implication elsewhere in the application)
+     *
+     * Calling this method will then merge any new index conditions with the old
+     * ones.
+     *
+     * @return $this
+     */
+    public function allowIndexMerging()
+    {
+        $this->_allow_index_merging = true;
+        return $this;
+    }
+
+    /**
+     * Clears any applied indexes at a given alias.  If no alias
+     * is passed then all indexes are cleared.
+     *
+     * @param null $alias
+     * @return $this
+     */
+    public function clearAppliedIndexes($alias = null)
+    {
+        if (is_null($alias)) {
+            $this->_index_parts = [];
+            return $this;
+        }
+
+        if (isset($this->_index_parts[$alias])) {
+            $this->_index_parts[$alias] = [];
+        }
+
+        return $this;
+    }
+
+    /**
+     * Given an array of alias and indexes
+     *
+     * @param array $indexes:
+     * An array of [ $alias => $index_options ], see: _addDqlQueryIndexPart for more info
+     * on the format of the $index_options array
+     *
+     * @return $this
+     * @throws Doctrine_Query_Exception
+     */
+    public function withIndexes($indexes = [])
+    {
+        if (empty($indexes)) {
+            return $this;
+        }
+
+        foreach ($indexes as $alias => $index_options) {
+            $this->_addDqlQueryIndexPart($alias, $index_options);
+        }
+
+        return $this;
+    }
+
+    /**
+     *  Adds a new pending index condition to apply to a query part.
+     *  It's important to note that the query builder will automatically know what the root alias is
+     *  and can therefore derive the following clauses
+     *
+     *      FROM some_table $alias USE INDEX (some_idx)
+     *      [JOIN-TYPE|null] JOIN some_table $alias USE INDEX FOR JOIN (some_idx)
+     *
+     *  This method is always called via withIndexes() and the input array passed can be in a couple of formats:
+     *  1) $alias => 'index_name'
+     *     In this format, INDEX_USE will be selected and the index name will
+     *     be applied, you can pass a string or array as specified above.
+     *
+     *  2) $alias => [['type' => $type, 'name' => $name]]
+     *     In this format, the specified index will be used and the index name(s)
+     *     will be applied
+     *
+     *  3) $alias => [Doctrine_Query::INDEX_TYPE => 'index_name']
+     *     In this format, we provide an associative array of INDEX_TYPE => index_name (same index_name rules apply
+     *     it can be a string or array).  This allows us to bind multiple index types for the same root alias.
+     *     For example, you may want to use a certain index, but ignore another, for that we could do
+     *     $alias = [
+     *         Doctrine_Query::INDEX_USE => ['some_idx', 'some_other_idx'],
+     *         Doctrine_Query::INDEX_IGNORE => ['some_bad_idx']
+     *     ]
+     *     This would generate ... FROM $alias USE INDEX (some_idx, some_other_idx) IGNORE INDEX (some_bad_idx) ...
+     *
+     * @param $alias
+     * @param array $index_options:
+     *
+     *  type (string, default: Doctrine_Query::INDEX_USE):
+     *  This key is optional and can either be one of the Doctrine_Query
+     *  root types.
+     *
+     *      INDEX_USE | INDEX_FORCE | INDEX_IGNORE
+     *
+     *  name (string, required)
+     *  The index name can be passed in several formats.
+     *
+     *      - It can be a string representing one index name: 'idx_1'
+     *      - It can be a comma separated string representing multiple index: 'idx_1, idx_2'
+     *      - It can be an array of index names ['idx_1', 'idx_2']
+     *      -
+     *
+     *  These will then resolve to (idx_1, idx_2)...any `()` passed in the idx string
+     *  will be omitted and turned replaced with empty strings.
+     *
+     * @return $this
+     *
+     * @throws Doctrine_Query_Exception
+     */
+    protected function _addDqlQueryIndexPart($alias, $index_options)
+    {
+        if (is_null($alias) || is_null($index_options)) {
+            throw new Doctrine_Query_Exception('Cannot define an empty alias or index name when defining an index.');
+        }
+
+        $index_parameters = [
+            'type' => self::INDEX_USE,
+            'name' => null
+        ];
+
+        if (is_string($index_options)) {
+            $index_parameters['name'] = $this->_getIndexNameParts($index_options);
+        } else if (is_array($index_options)) {
+            if (isset($index_options[self::INDEX_FORCE]) || isset($index_options[self::INDEX_USE]) || isset($index_options[self::INDEX_IGNORE])) {
+                // If we provided an associative array of index types to apply, then we can bind them here
+                foreach ($index_options as $type => $name) {
+                    // Don't apply the index if it wasn't in this format, it would not be valid!
+                    if (!in_array($type, [self::INDEX_IGNORE, self::INDEX_USE, self::INDEX_FORCE])) {
+                        continue;
+                    }
+                    // Apply the requested index(s) to this type array
+                    $this->_addDqlQueryIndexPart($alias, ['type' => $type, 'name' => $name]);
+                }
+                return $this;
+            } else if (!array_key_exists('name', $index_options) && !array_key_exists('type', $index_options)) {
+                // If we pass an array of indexes ['client_id_idx', 'order_id_idx'] then its already in a valid format
+                // any other non string types will be omitted by _getIndexNameParts
+                $index_parameters['name'] = $this->_getIndexNameParts($index_options);
+            } else {
+                // We have passed a ['type' => X, 'name' => Y] array, bind the values here.
+                $index_parameters['type'] = $this->_getIndexType($index_options['type']);
+                $index_parameters['name'] = $this->_getIndexNameParts($index_options['name']);
+            }
+        }
+        // Be safe and ensure we have a name
+        if (is_null($index_parameters['name'])) {
+            throw new Doctrine_Query_Exception("An index name must be provided.");
+        }
+
+        $type = $index_parameters['type'];
+        if (!empty($this->_index_parts[$alias][$type]) && $this->_allow_index_merging) {
+            // Return a unique/merged intersection between the existing and old values
+            $this->_index_parts[$alias][$type] = $this->_getIndexNameParts(
+                array_merge($this->_index_parts[$alias][$type], $index_parameters['name'])
+            );
+        } else {
+            $this->_index_parts[$alias][$type] = $index_parameters['name'];
+        }
+
+        return $this;
+    }
+
+    /**
+     * Gets the index type based on the valid index types that can be used.
+     *
+     * @param $type
+     * @return string
+     */
+    protected function _getIndexType($type)
+    {
+        $allowed_index_types = [
+            self::INDEX_USE, self::INDEX_FORCE, self::INDEX_IGNORE
+        ];
+
+        if (is_null($type) || !in_array(strtoupper(trim($type)), $allowed_index_types)) {
+            $type = self::INDEX_USE;
+        }
+
+        return $type;
+    }
+
+    /**
+     * Name could be provided as a string, or as an array, lets ensure we
+     * are always returning an array of index parts
+     *
+     * Parenthesis are auto stripped from input index names to prevent
+     * conflict with the auto wrapping done in _applyIndexesToQuery()
+     *
+     * Any duplicate array parts are stripped.
+     *
+     * @param $indexes
+     * @return array
+     */
+    protected function _getIndexNameParts($indexes)
+    {
+        if (!is_array($indexes)) {
+            $indexes = [$indexes];
+        }
+
+        $index_parts = [];
+        foreach ($indexes as $index) {
+            if (!is_string($index)) {
+                continue;
+            }
+            // We don't want to allow brackets here, they are auto bound and applied.
+            $index_parts[] = str_replace(['(', ')'], '', $index);
+        }
+
+        return array_unique($index_parts);
+    }
+
+    /**
+     * Applies the desired index to the prepared query string.
+     *
+     * @param $sql
+     * @return mixed
+     */
+    protected function _applyIndexesToQuery($sql)
+    {
+        if (empty($this->_index_parts)) {
+            return $sql;
+        }
+
+        foreach ($this->_index_parts as $alias => $index_part) {
+            // We need to flip the alias map as it is set as `d1` => `o` etc.  This will let us
+            // bind our provided alias to doctrines prepared query alias.
+            $alias_map = array_flip($this->_tableAliasMap);
+            // Doctrine stores a map of aliases after it has prepared the raw SQL, this translates
+            // our once easy to read aliases like `o` to `d1`, `d2` etc.  We will check the
+            // alias map to see if our value exists there, otherwise we will use the set alias.
+            $alias = isset($alias_map[$alias]) ? $alias_map[$alias] : $alias;
+            // Match the first join occurrence and then store the position that string
+            // is offset in the query so we can append a USE INDEX constraint before it.
+            $reg_expression = "/((\bfrom\b)|((\b(inner|outer|left|right)\b)? (join))) (`[A-Za-z_0-9]+`) `$alias`/i";
+            preg_match($reg_expression, $sql, $matches, PREG_OFFSET_CAPTURE);
+
+            if (!empty($matches)) {
+                foreach ($index_part as $type => $indexes) {
+                    // We need to offset the match position + the length of the match so we can insert directly after the
+                    // matched string...this approach is non bias toward FROM, LEFT JOIN, INNER JOIN etc.
+                    $position   = $matches[0][1] + strlen($matches[0][0]);
+                    $index_type = $type . (stripos($matches[0][0], 'join') ? ' FOR JOIN ' : '');
+                    $index_name = implode(', ', $indexes);
+
+                    $sql = substr_replace($sql, " {$index_type} ({$index_name})", $position, 0);
+                }
+            }
+        }
+
+        return $sql;
     }
 
     /**
