@@ -3068,7 +3068,7 @@ class Doctrine_Table extends Doctrine_Configurable implements Countable, Seriali
      */
     private static function getHydrationQuery($root_table_name, $relationships = [])
     {
-        $query = Doctrine::getTable($root_table_name)
+        $query = Doctrine_Core::getTable($root_table_name)
             ->createQuery('q')
             ->select('q.*');
 
