@@ -524,7 +524,7 @@ class Doctrine_Export_Mysql extends Doctrine_Export
         try {
             $query  = 'CREATE TABLE ' . $sequenceName
                     . ' (' . $seqcolName . ' BIGINT NOT NULL AUTO_INCREMENT, PRIMARY KEY ('
-                    . $seqcolName . ')) ' . implode($optionsStrings, ' ');
+                    . $seqcolName . ')) ' . implode(' ', $optionsStrings);
 
             $res    = $this->conn->exec($query);
         } catch(Doctrine_Connection_Exception $e) {
