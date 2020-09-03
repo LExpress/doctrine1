@@ -825,10 +825,6 @@ abstract class Doctrine_Record extends Doctrine_Record_Abstract implements Count
                 unset($vars['_data'][$k]);
             } else {
                 switch ($this->_table->getTypeOf($k)) {
-                    case 'array':
-                    case 'object':
-                        $vars['_data'][$k] = serialize($vars['_data'][$k]);
-                        break;
                     case 'gzip':
                         $vars['_data'][$k] = gzcompress($vars['_data'][$k]);
                         break;
@@ -874,10 +870,6 @@ abstract class Doctrine_Record extends Doctrine_Record_Abstract implements Count
 
         foreach ($this->_data as $k => $v) {
             switch ($this->_table->getTypeOf($k)) {
-                case 'array':
-                case 'object':
-                    $this->_data[$k] = unserialize($this->_data[$k]);
-                    break;
                 case 'gzip':
                     $this->_data[$k] = gzuncompress($this->_data[$k]);
                     break;
