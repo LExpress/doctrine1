@@ -80,6 +80,13 @@ class Doctrine_Validator_TestCase extends Doctrine_UnitTestCase
         $this->assertFalse(Doctrine_Validator::isValidType($var, 'array'));
         $this->assertFalse(Doctrine_Validator::isValidType($var, 'object'));
 
+        $var = '123.00';
+        $this->assertTrue(Doctrine_Validator::isValidType($var, 'string'));
+        $this->assertFalse(Doctrine_Validator::isValidType($var, 'integer'));
+        $this->assertTrue(Doctrine_Validator::isValidType($var, 'float'));
+        $this->assertFalse(Doctrine_Validator::isValidType($var, 'array'));
+        $this->assertFalse(Doctrine_Validator::isValidType($var, 'object'));
+
         $var = '';
         $this->assertTrue(Doctrine_Validator::isValidType($var, 'string'));
         $this->assertFalse(Doctrine_Validator::isValidType($var, 'integer'));

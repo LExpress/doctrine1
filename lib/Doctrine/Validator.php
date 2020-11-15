@@ -171,7 +171,7 @@ class Doctrine_Validator extends Doctrine_Locator_Injectable
             case 'float':
             case 'double':
             case 'decimal':
-                return (string) $var === (string) (float) $var;
+                return (string) $var == (string) (float) $var;
             case 'integer':
                 return (string) $var === (string)round((float) $var);
             case 'string':
