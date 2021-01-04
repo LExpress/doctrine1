@@ -47,7 +47,7 @@ abstract class Doctrine_Query_Abstract
     /**
      * a common value for joining DQL clauses in the Having clause
      */
-    const HAVING_JOINER = ' ';
+    const HAVING_JOINER = ' AND ';
 
     /**
      * constant for SELECT queries
