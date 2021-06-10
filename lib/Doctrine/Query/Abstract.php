@@ -306,6 +306,17 @@ abstract class Doctrine_Query_Abstract
     protected $_allow_index_merging = false;
 
     /**
+     * When we want to generate a query from a derived table, we need to be able to track the
+     * serialized query (which is produced from running parseSubquery on either a string
+     * or a Doctrine_Query object).
+     *
+     * We also need to track any parameters bound to the Doctrine_Query object so that we
+     * can merge them with the params on the parent query.
+     */
+    protected $_derivedTable;
+    protected $_derivedTableParams;
+
+    /**
      * Constructor.
      *
      * @param Doctrine_Connection        $connection The connection object the query will use.
@@ -962,6 +973,9 @@ abstract class Doctrine_Query_Abstract
     public function calculateQueryCacheHash()
     {
         $dql = $this->getDql();
+        if (!empty($this->_derivedTable)) {
+            $dql .= md5($this->_derivedTable);
+        }
         $hash = md5($dql . var_export($this->_pendingJoinConditions, true) . 'DOCTRINE_QUERY_CACHE_SALT');
         return $hash;
     }
@@ -996,6 +1010,28 @@ abstract class Doctrine_Query_Abstract
       } else {
           return $this->calculateResultCacheHash($params);
       }
+    }
+
+    /**
+     * applyDerivedTableParams
+     * Merge any passed params into the 'exec' parameters and also apply the derived
+     * table parameters into the the global _params which will be executed.
+     *
+     * @param mixed $params
+     *
+     * @return void
+     */
+    private function applyDerivedTableParams($params = []) {
+        if (!empty($this->_derivedTableParams)) {
+            // Adds the derivedTable params to the params bound to this query
+            // we ensure that the derived table params are applied first
+            // before any of the current params are applied as the
+            // fromSubquery clause will always be first.
+            $this->_params = Doctrine_Lib::arrayDeepCombine($this->_derivedTableParams, $this->_params);
+            // Any additional exec params can now be merged into the
+            // parameter list.
+            $this->_params['exec'] = Doctrine_Lib::arrayDeepCombine($this->_params['exec'], $params);
+        }
     }
 
     /**
@@ -1093,6 +1129,8 @@ abstract class Doctrine_Query_Abstract
      */
     public function execute($params = array(), $hydrationMode = null)
     {
+        // Apply any additional exec params to the query.
+        $this->applyDerivedTableParams($params);
         // Clean any possible processed params
         $this->_execParams = array();
 

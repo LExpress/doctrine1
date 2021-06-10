@@ -1035,10 +1035,11 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
             if ($k === 0) {
                 if ( ! $ignorePending && $this->_type == self::SELECT) {
                     // We may still have pending conditions
+                    $alias_lookup = empty($this->_derivedTable) ? $e[1] : end($e);
                     $alias = count($e) > 1
                         ? $this->getComponentAlias($e[1])
                         : null;
-                    $where = $this->_processPendingJoinConditions($alias);
+                    $where = $this->_processPendingJoinConditions($alias_lookup);
 
                     // apply inheritance to WHERE part
                     if ( ! empty($where)) {
@@ -1096,6 +1097,32 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
             $this->_sqlParts['from'][$k] = $part;
         }
         return $q;
+    }
+
+    /**
+     * fromSubquery
+     * Given a string or a Query object, we will parse this to be a subquery
+     * which we will later swap the 'from' table for.
+     *
+     * There is a current limitation where duplicate aliases will cause an
+     * error, but we are only really using this method for slow queries.
+     *
+     * @param mixed $query
+     *
+     * @return void
+     */
+    public function fromSubquery($query)
+    {
+        // If we passed a Query (and not a string) ensure we bind the params to this
+        // query instance, otherwise we will get an error.
+        if ($query instanceof Doctrine_Query) {
+            $this->_derivedTableParams = $query->getParams();
+        }
+
+        $this->_derivedTable = $this->parseSubquery($query);
+        $this->_derivedTable = preg_replace('/d[0-9]*__/i', '', $this->_derivedTable);
+
+        return $this;
     }
 
     /**
@@ -1193,6 +1220,12 @@ class Doctrine_Query extends Doctrine_Query_Abstract implements Countable
                 // Root alias is the key of difference of query components
                 $diffQueryComponents = array_diff_key($queryComponentsAfter, $queryComponentsBefore);
                 $this->_rootAlias = key($diffQueryComponents);
+            }
+
+            if ($this->_derivedTable) {
+                $alias_parts = explode(' ', $this->_sqlParts['from'][0]);
+                $alias = end($alias_parts);
+                $this->_sqlParts['from'][0] = "{$this->_derivedTable} AS {$alias}";
             }
         }
         $this->_state = self::STATE_CLEAN;

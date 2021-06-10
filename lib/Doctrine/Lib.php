@@ -269,6 +269,36 @@ class Doctrine_Lib
     }
 
     /**
+     * arrayDeepCombine
+     *
+     * Recursively walks down the destination array and attempts to merge
+     * the compare array at the same key.
+     *
+     * @param array $destination
+     * @param array $compare
+     *
+     * @return void
+     */
+    public static function arrayDeepCombine(array $destination, array $compare)
+    {
+        // If we encounter a scenario where we have two array properties then we
+        // should recursively call this method and set the keys.
+        foreach ($destination as $key => $value) {
+            if (empty($compare[$key])) {
+                continue;
+            }
+
+            if (is_array($value) && is_array($compare[$key])) {
+                $destination[$key] = array_merge($destination[$key], $compare[$key]);
+            } else if (!empty($compare[$key])) {
+                self::arrayDeepCombine($destination[$key], $compare[$key]);
+            }
+        }
+
+        return $source;
+    }
+
+    /**
      * arrayDiffSimple
      *
      * array arrayDiffSimple ( array array1 , array array2 )
