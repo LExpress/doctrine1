@@ -93,7 +93,7 @@ class Doctrine_Locking_Manager_Pessimistic
      * Obtains a lock on a {@link Doctrine_Record}
      *
      * @param  Doctrine_Record $record     The record that has to be locked
-     * @param  mixed           $userIdent  A unique identifier of the locking user
+     * @param  mixed           $userIdent    A unique identifier for the lock.
      * @return boolean  TRUE if the locking was successful, FALSE if another user
      *                  holds a lock on this record
      * @throws Doctrine_Locking_Exception  If the locking failed due to database errors
@@ -106,9 +106,16 @@ class Doctrine_Locking_Manager_Pessimistic
         $gotLock = false;
         $time = time();
 
+        $objectKey = [];
         if (is_array($key)) {
             // Composite key
+            foreach ($key as $keyName) {
+                $objectKey[] = $record->get($keyName);
+            }
             $key = implode('|', $key);
+            $objectKey = implode('|', $objectKey);
+        } else {
+            $objectKey  = $record->get($key);
         }
 
         try {
@@ -120,7 +127,7 @@ class Doctrine_Locking_Manager_Pessimistic
                                   . ' VALUES (:object_type, :object_key, :user_ident, :ts_obtained)');
 
             $stmt->bindParam(':object_type', $objectType);
-            $stmt->bindParam(':object_key', $key);
+            $stmt->bindParam(':object_key', $objectKey);
             $stmt->bindParam(':user_ident', $userIdent);
             $stmt->bindParam(':ts_obtained', $time);
 
@@ -134,8 +141,8 @@ class Doctrine_Locking_Manager_Pessimistic
             }
 
             if ( ! $gotLock) {
-                $lockingUserIdent = $this->_getLockingUserIdent($objectType, $key);
-                if ($lockingUserIdent !== null && $lockingUserIdent == $userIdent) {
+                $lockingKey = $this->_getUserIdent($objectType, $key);
+                if ($lockingKey !== null && $lockingKey == $userIdent) {
                     $gotLock = true; // The requesting user already has a lock
                     // Update timestamp
                     $stmt = $dbh->prepare('UPDATE ' . $this->_lockTable 
@@ -145,8 +152,8 @@ class Doctrine_Locking_Manager_Pessimistic
                                           . ' user_ident  = :user_ident');
                     $stmt->bindParam(':ts', $time);
                     $stmt->bindParam(':object_type', $objectType);
-                    $stmt->bindParam(':object_key', $key);
-                    $stmt->bindParam(':user_ident', $lockingUserIdent);
+                    $stmt->bindParam(':object_key', $objectKey);
+                    $stmt->bindParam(':user_ident', $lockingKey);
                     $stmt->execute();
                 }
             }
@@ -163,7 +170,7 @@ class Doctrine_Locking_Manager_Pessimistic
      * Releases a lock on a {@link Doctrine_Record}
      *
      * @param  Doctrine_Record $record    The record for which the lock has to be released
-     * @param  mixed           $userIdent The unique identifier of the locking user
+     * @param  mixed           $userIdent.  The unique identifier for the lock
      * @return boolean  TRUE if a lock was released, FALSE if no lock was released
      * @throws Doctrine_Locking_Exception If the release procedure failed due to database errors
      */
@@ -172,9 +179,16 @@ class Doctrine_Locking_Manager_Pessimistic
         $objectType = $record->getTable()->getComponentName();
         $key        = $record->getTable()->getIdentifier();
 
+        $objectKey = [];
         if (is_array($key)) {
             // Composite key
+            foreach ($key as $keyName) {
+                $objectKey[] = $record->get($keyName);
+            }
             $key = implode('|', $key);
+            $objectKey = implode('|', $objectKey);
+        } else {
+            $objectKey  = $record->get($key);
         }
 
         try {
@@ -184,7 +198,7 @@ class Doctrine_Locking_Manager_Pessimistic
                                         object_key  = :object_key  AND
                                         user_ident  = :user_ident");
             $stmt->bindParam(':object_type', $objectType);
-            $stmt->bindParam(':object_key', $key);
+            $stmt->bindParam(':object_key', $objectKey);
             $stmt->bindParam(':user_ident', $userIdent);
             $stmt->execute();
 
@@ -197,14 +211,14 @@ class Doctrine_Locking_Manager_Pessimistic
     }
 
     /**
-     * Gets the unique user identifier of a lock
+     * Gets the unique identifier of a lock
      *
      * @param  string $objectType  The type of the object (component name)
      * @param  mixed  $key         The unique key of the object. Can be string or array
-     * @return string              The unique user identifier for the specified lock
+     * @return string              The unique identifier for the specified lock
      * @throws Doctrine_Locking_Exception If the query failed due to database errors
      */
-    private function _getLockingUserIdent($objectType, $key)
+    private function _getUserIdent($objectType, $key)
     {
         if (is_array($key)) {
             // Composite key
@@ -242,7 +256,19 @@ class Doctrine_Locking_Manager_Pessimistic
     {
         $objectType = $lockedRecord->getTable()->getComponentName();
         $key        = $lockedRecord->getTable()->getIdentifier();
-        return $this->_getLockingUserIdent($objectType, $key);
+        
+        $objectKey = [];
+        if (is_array($key)) {
+            // Composite key
+            foreach ($key as $keyName) {
+                $objectKey[] = $lockedRecord->get($keyName);
+            }
+            $objectKey = implode('|', $objectKey);
+        } else {
+            $objectKey  = $lockedRecord->get($key);
+        }
+
+        return $this->_getUserIdent($objectType, $objectKey);
     }
 
     /**
@@ -252,7 +278,7 @@ class Doctrine_Locking_Manager_Pessimistic
      *
      * @param  integer $age  The maximum valid age of locks in seconds
      * @param  string  $objectType  The type of the object (component name)
-     * @param  mixed   $userIdent The unique identifier of the locking user
+     * @param  mixed   $userIdent The unique identifier of the lock
      * @return integer The number of locks that have been released
      * @throws Doctrine_Locking_Exception If the release process failed due to database errors
      */

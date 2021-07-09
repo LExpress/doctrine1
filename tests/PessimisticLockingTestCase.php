@@ -39,15 +39,29 @@ class Doctrine_PessimisticLocking_TestCase extends Doctrine_UnitTestCase
      *
      * Creates a locking manager and a test record to work with.
      */
-    public function testInitData()
+    public function setup()
     {
+        parent::setup();
+
         $this->lockingManager = new Doctrine_Locking_Manager_Pessimistic($this->connection);
-        
+
         // Create sample data to test on
         $entry1 = new Forum_Entry();
         $entry1->author = 'Bart Simpson';
         $entry1->topic  = 'I love donuts!';
         $entry1->save();
+
+        $entry2 = new Forum_Entry();
+        $entry2->author = 'Bart Simpson';
+        $entry2->topic  = 'I play saxophone.';
+        $entry2->save();
+    }
+
+    public function tearDown()
+    {
+        parent::tearDown();
+        $this->lockingManager->releaseAgedLocks(-1); // age -1 seconds => release all in prep for next test
+        $this->connection->query("DELETE FROM Forum_Entry WHERE Forum_Entry.author = 'Bart Simpson'");
     }
     
     public function prepareTables()
@@ -73,6 +87,10 @@ class Doctrine_PessimisticLocking_TestCase extends Doctrine_UnitTestCase
         $gotLock = $this->lockingManager->getLock($entries[0], 'konstav');
         $this->assertFalse($gotLock);
         
+        // Test successfully getting a lock on the second forum entry
+        $gotLock = $this->lockingManager->getLock($entries[1], 'michael');
+        $this->assertTrue($gotLock);
+
         // Test release lock
         $released = $this->lockingManager->releaseLock($entries[0], 'romanb');
         $this->assertTrue($released);
